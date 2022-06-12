@@ -93,6 +93,7 @@ namespace et
         result.iterations = iterations;
 
         delete[] differences;
+        delete _benchmark;
 
         return result;
     }
