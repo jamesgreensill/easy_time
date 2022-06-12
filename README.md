@@ -18,7 +18,7 @@ int main()
 
 	// This will convert 1000ms or 1 second to a time_point.
 	// This is equivilant to:
-	// std::chrono::time_point<hrc>(std::chrono::milliseconds(1 * SECOND))
+	// std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(1 * SECOND))
 	// as you can see... it is much simplier.
 	et::time_point_m example_point_custom_ms = {1 * SECOND};
 
