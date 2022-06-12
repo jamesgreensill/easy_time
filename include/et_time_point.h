@@ -1,25 +1,28 @@
 #pragma once
 #include <chrono>
+#include <ostream>
+
+#include "et_base.h"
 
 namespace et
 {
 #define tp_cast(value, type) std::chrono::time_point_cast<std::chrono::type>(value).time_since_epoch().count()
 
-    typedef std::chrono::high_resolution_clock hrc;
-    typedef std::chrono::time_point<hrc> tp_hrc;
+    using hrc = std::chrono::high_resolution_clock;
+    using tp_hrc = std::chrono::time_point<hrc>;
 
-    typedef std::chrono::nanoseconds nanoseconds;
-    typedef std::chrono::microseconds microseconds;
-    typedef std::chrono::milliseconds milliseconds;
-    typedef std::chrono::seconds seconds;
-    typedef std::chrono::minutes minutes;
-    typedef std::chrono::hours hours;
+    using nanoseconds = std::chrono::nanoseconds;
+    using microseconds = std::chrono::microseconds;
+    using milliseconds = std::chrono::milliseconds;
+    using seconds = std::chrono::seconds;
+    using minutes = std::chrono::minutes;
+    using hours = std::chrono::hours;
 
-    struct time_point
+    struct time_point final : public base
     {
         time_point();
-        time_point(long long milliseconds);
-        time_point(tp_hrc point);
+        time_point(const long long& milliseconds);
+        time_point(const tp_hrc& point);
 
         tp_hrc now;
 
@@ -51,9 +54,9 @@ namespace et
 
     inline time_point::time_point() : time_point(hrc::now()) {}
 
-    inline time_point::time_point(long long milliseconds) : time_point(tp_hrc(et::milliseconds(milliseconds))) {}
+    inline time_point::time_point(const long long& milliseconds) : time_point(tp_hrc(et::milliseconds(milliseconds))) {}
 
-    inline time_point::time_point(tp_hrc point)
+    inline time_point::time_point(const tp_hrc& point)
     {
         now = point;
         nanoseconds = tp_cast(point, nanoseconds);
@@ -66,37 +69,37 @@ namespace et
 
     inline time_point time_point::operator+(const time_point& other) const
     {
-        time_point rv = *this;
-        rv.nanoseconds += other.nanoseconds;
-        rv.microseconds += other.microseconds;
-        rv.milliseconds += other.milliseconds;
-        rv.seconds += other.seconds;
-        rv.minutes += other.minutes;
-        rv.hours += other.hours;
+        time_point rv = {};
+        rv.nanoseconds = nanoseconds + other.nanoseconds;
+        rv.microseconds = microseconds + other.microseconds;
+        rv.milliseconds = milliseconds + other.milliseconds;
+        rv.seconds = seconds + other.seconds;
+        rv.minutes = minutes + other.minutes;
+        rv.hours = hours + other.hours;
         return rv;
     }
 
     inline time_point time_point::operator-(const time_point& other) const
     {
-        time_point rv = *this;
-        rv.nanoseconds -= other.nanoseconds;
-        rv.microseconds -= other.microseconds;
-        rv.milliseconds -= other.milliseconds;
-        rv.seconds -= other.seconds;
-        rv.minutes -= other.minutes;
-        rv.hours -= other.hours;
+        time_point rv = {};
+        rv.nanoseconds = nanoseconds - other.nanoseconds;
+        rv.microseconds = microseconds - other.microseconds;
+        rv.milliseconds = milliseconds - other.milliseconds;
+        rv.seconds = seconds - other.seconds;
+        rv.minutes = minutes - other.minutes;
+        rv.hours = hours - other.hours;
         return rv;
     }
 
     inline time_point time_point::operator*(const long long& other) const
     {
-        time_point rv = *this;
-        rv.nanoseconds *= other;
-        rv.microseconds *= other;
-        rv.milliseconds *= other;
-        rv.seconds *= other;
-        rv.minutes *= other;
-        rv.hours *= other;
+        time_point rv = {};
+        rv.nanoseconds = nanoseconds * other;
+        rv.microseconds = microseconds * other;
+        rv.milliseconds = milliseconds * other;
+        rv.seconds = seconds * other;
+        rv.minutes = minutes * other;
+        rv.hours = hours * other;
         return rv;
     }
 }
