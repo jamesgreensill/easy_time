@@ -1,6 +1,6 @@
 # easy_time
  #### Header Only C++ Timings & Benchmark Library.
-easy_time is a wrapper around the `<chrono>` library, designed to make the entire interface easier to use, hence `easy_time`. 
+`easy_time` is a wrapper around the `<chrono>` library, designed to make the entire interface easier to use, hence `easy_time`. 
 
 `easy_time` is a header only library, so it can be compiled (using the premake files), or it can be directly put into any project without any linking issues. `easy_time` was made in C++14 and has not been verified to work on any other standard, though more modern standards should compile fine.
 
