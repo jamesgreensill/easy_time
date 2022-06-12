@@ -18,6 +18,16 @@ namespace et
     using minutes = std::chrono::minutes;
     using hours = std::chrono::hours;
 
+    enum conversions : long long
+    {
+        NANOSECOND = 1,
+        MICROSECOND = NANOSECOND * 1000,
+        MILLISECOND = MICROSECOND * 1000,
+        SECOND = MICROSECOND * 1000,
+        MINUTE = SECOND * 60,
+        HOUR = MINUTE * 60,
+    };
+
     struct time_point final : public base
     {
         time_point();
@@ -54,7 +64,7 @@ namespace et
 
     inline time_point::time_point() : time_point(hrc::now()) {}
 
-    inline time_point::time_point(const long long& milliseconds) : time_point(tp_hrc(et::milliseconds(milliseconds))) {}
+    inline time_point::time_point(const long long& milliseconds) : time_point(std::chrono::time_point<hrc>(std::chrono::milliseconds(milliseconds))) {}
 
     inline time_point::time_point(const tp_hrc& point)
     {
