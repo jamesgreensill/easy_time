@@ -22,7 +22,7 @@ namespace et
 
     struct time_point_m final : public base
     {
-        tp_hrc now;
+        tp_hrc now_point;
         time_point_m();
         time_point_m(tp_hrc point);
         time_point_m(long long nanoseconds);
@@ -34,6 +34,8 @@ namespace et
         long long to() const;
         template<typename  time_type>
         tp<time_type> to_point() const;
+
+        static time_point_m now();
 
         time_point_m operator+(const time_point_m& other) const;
         time_point_m operator+=(const time_point_m& other);
@@ -60,7 +62,7 @@ namespace et
      * \brief Core Constructor. Every constructor delegates to this.
      * \param point Point in time. (std::chrono::time_point<hrc>)
      */
-    inline time_point_m::time_point_m(tp_hrc point) { now = point; }
+    inline time_point_m::time_point_m(tp_hrc point) { now_point = point; }
 
     /**
      * \brief Default Constructor. Uses the current time.
@@ -101,66 +103,74 @@ namespace et
         return rv;
     }
 
+    inline time_point_m time_point_m::now()
+    {
+        // immediately get the time first.
+        const auto& time_point = hrc::now();
+        // then convert it.
+        return { time_point };
+    }
+
     inline time_point_m time_point_m::operator+(const time_point_m& other) const
     {
-        const auto other_ms = std::chrono::duration_cast<et::nanoseconds>(other.now.time_since_epoch()).count();
-        const auto this_ms = std::chrono::duration_cast<et::nanoseconds>(now.time_since_epoch()).count();
+        const auto other_ms = std::chrono::duration_cast<et::nanoseconds>(other.now_point.time_since_epoch()).count();
+        const auto this_ms = std::chrono::duration_cast<et::nanoseconds>(now_point.time_since_epoch()).count();
         return { this_ms + other_ms };
     }
 
     inline time_point_m time_point_m::operator+=(const time_point_m& other)
     {
-        long long other_ns = std::chrono::duration_cast<et::nanoseconds>(other.now.time_since_epoch()).count();
-        long long this_ns = std::chrono::duration_cast<et::nanoseconds>(now.time_since_epoch()).count();
+        long long other_ns = std::chrono::duration_cast<et::nanoseconds>(other.now_point.time_since_epoch()).count();
+        long long this_ns = std::chrono::duration_cast<et::nanoseconds>(now_point.time_since_epoch()).count();
 
         return *this = time_point_m((this_ns - other_ns) / static_cast<long long>(1e+6));
     }
 
     inline time_point_m time_point_m::operator-(const time_point_m& other) const
     {
-        return std::chrono::duration_cast<et::nanoseconds>(this->now - other.now).count();
+        return std::chrono::duration_cast<et::nanoseconds>(this->now_point - other.now_point).count();
     }
 
     inline time_point_m time_point_m::operator-=(const time_point_m& other)
     {
-        return *this = std::chrono::duration_cast<et::nanoseconds>(this->now - other.now).count();
+        return *this = std::chrono::duration_cast<et::nanoseconds>(this->now_point - other.now_point).count();
     }
 
     inline time_point_m time_point_m::operator*(const long long& other) const
     {
-        const auto this_ms = std::chrono::duration_cast<et::nanoseconds>(now.time_since_epoch()).count();
+        const auto this_ms = std::chrono::duration_cast<et::nanoseconds>(now_point.time_since_epoch()).count();
         return this_ms * other;
     }
 
     inline time_point_m time_point_m::operator/(const long long& other) const
     {
-        const auto this_ms = std::chrono::duration_cast<et::nanoseconds>(now.time_since_epoch()).count();
+        const auto this_ms = std::chrono::duration_cast<et::nanoseconds>(now_point.time_since_epoch()).count();
         return this_ms / other;
     }
 
     inline bool time_point_m::operator>(const time_point_m& other) const
     {
-        return now > other.now;
+        return now_point > other.now_point;
     }
 
     inline bool time_point_m::operator>=(const time_point_m& other) const
     {
-        return now >= other.now;
+        return now_point >= other.now_point;
     }
 
     inline bool time_point_m::operator<(const time_point_m& other) const
     {
-        return now < other.now;
+        return now_point < other.now_point;
     }
 
     inline bool time_point_m::operator<=(const time_point_m& other) const
     {
-        return now <= other.now;
+        return now_point <= other.now_point;
     }
 
     inline bool time_point_m::operator==(const time_point_m& other) const
     {
-        return now == other.now;
+        return now_point == other.now_point;
     }
 
     /**
@@ -182,6 +192,6 @@ namespace et
     template <typename time_type>
     tp<time_type> time_point_m::to_point() const
     {
-        return std::chrono::time_point_cast<time_type>(now);
+        return std::chrono::time_point_cast<time_type>(now_point);
     }
 }
