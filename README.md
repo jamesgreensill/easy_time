@@ -19,7 +19,7 @@ int main()
 	// This will convert 1000ms or 1 second to a time_point.
 	// This is equivilant to:
 	// std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(1 * SECOND))
-	// as you can see... it is much simplier.
+	// as you can see... it is much simpler.
 	et::time_point_m example_point_custom_ms = {1 * SECOND};
 
 	// This will convert the time point to nano seconds as a 64bit integer.
@@ -32,7 +32,7 @@ int main()
 	et::minutes
 	et::hours
 	*/
-	// This is equivilant to:
+	// This is equivalent to:
 	//long long time_in_ns = std::chrono::time_point_cast<et::nanoseconds>(now).time_since_epoch().count()
 	long long time_in_ns = example_point_custom_ms.to<et::nanoseconds>();
 
