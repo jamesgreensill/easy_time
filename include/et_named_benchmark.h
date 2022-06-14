@@ -1,48 +1,57 @@
 #pragma once
-#include <iostream>
 #include <unordered_map>
 
-#include "et_base.h"
-#include "et_time_point_m.h"
-#include "et_benchmark_result.h"
 #include "et_benchmark_record.h"
+#include "et_benchmark_result.h"
+#include "et_time_point_m.h"
 
 namespace et
 {
-    constexpr int k_max_benchmark_record_count = 1024;
+#ifdef CUSTOM_MAX_BENCHMARK_RECORD_COUNT
+#define MAX_BENCHMARK_RECORD_COUNT CUSTOM_MAX_BENCHMARK_RECORD_COUNT
+#else
+#define MAX_BENCHMARK_RECORD_COUNT 1024
+#endif
 
     class named_benchmark
     {
-        static void post_now(const std::string& name);
-        static void post_end(const std::string& name);
+    public:
+        static bool post_now(const std::string& name);
+        static bool post_end(const std::string& name);
+        static bool start(const std::string& name);
         static benchmark_result end(const std::string& name);
 
-        static std::unordered_map<std::string, named_benchmark_record<k_max_benchmark_record_count>> records;
+    private:
+        static std::unordered_map<std::string, named_benchmark_record<MAX_BENCHMARK_RECORD_COUNT>> records;
     };
 
-    inline void named_benchmark::post_now(const std::string& name)
+    inline bool named_benchmark::post_now(const std::string& name)
     {
-        const auto& it = records.find(name);
-        if (it != records.end())
-        {
-            if (!it->second.push_start())
-            {
-                std::cout << "failed to post start for benchmark " << name << std::endl;
-            }
-        }
-        else records.emplace(name, named_benchmark_record<k_max_benchmark_record_count>{});
+        const time_point_m now = time_point_m::now();
+
+        records[name].push_start(now);
+
+        return true;
     }
 
-    inline void named_benchmark::post_end(const std::string& name)
+    inline bool named_benchmark::post_end(const std::string& name)
+    {
+        const time_point_m now = time_point_m::now();
+
+        records[name].push_end(now);
+
+        return true;
+    }
+
+    inline bool named_benchmark::start(const std::string& name)
     {
         const auto& it = records.find(name);
         if (it != records.end())
         {
-            if (!it->second.push_end())
-            {
-                std::cout << "failed to post end for benchmark " << name << std::endl;
-            }
+            return false;
         }
+        records.emplace(name, named_benchmark_record<MAX_BENCHMARK_RECORD_COUNT>{});
+        return true;
     }
 
     inline benchmark_result named_benchmark::end(const std::string& name)
@@ -58,5 +67,5 @@ namespace et
         return {};
     }
 
-    std::unordered_map<std::string, named_benchmark_record<k_max_benchmark_record_count>> named_benchmark::records = {};
+    std::unordered_map<std::string, named_benchmark_record<MAX_BENCHMARK_RECORD_COUNT>> named_benchmark::records = {};
 }
