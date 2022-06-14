@@ -1,7 +1,7 @@
 #pragma once
 #include <chrono>
-#include <string>
 #include <ostream>
+#include <string>
 
 #include "et_base.h"
 
