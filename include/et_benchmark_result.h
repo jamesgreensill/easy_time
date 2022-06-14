@@ -8,7 +8,7 @@ namespace et
         public base
     {
     public:
-        long long iterations{};
+        long long iterations = 0;
         time_point_m highest_case;
         time_point_m lowest_case;
         time_point_m mean_case;
