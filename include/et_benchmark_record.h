@@ -1,10 +1,9 @@
 #pragma once
-#include <vector>
-
 #include "et_base.h"
 #include "et_time_point_m.h"
 
 #include "et_benchmark_result.h"
+#include "et_fixed_queue.h"
 
 namespace et
 {
@@ -17,115 +16,117 @@ namespace et
     /**
      * \brief Benchmark record used for the internal benchmark system.
      */
-    template<unsigned long long size>
+    template<unsigned long long t_size>
     struct benchmark_record : base
     {
-        time_point_m* start_points = new time_point_m[size];
-        time_point_m* end_points = new time_point_m[size];
+        et::fixed_queue<time_point_m, t_size> start_points = {};
+        et::fixed_queue<time_point_m, t_size> end_points = {};
         record_state state = record_state::invalid;
 
-        bool push_start() const;
-        bool push_end() const;
+        bool push_start(time_point_m point);
+        bool push_end(time_point_m point);
 
         virtual benchmark_result to_result();
         std::string to_string() const override;
-        ~benchmark_record() override;
 
     private:
-        static bool populate(time_point_m* collection, time_point_m point);
+        static bool populate(et::fixed_queue<time_point_m, t_size>& collection, time_point_m point);
     };
 
-    template <unsigned long long size>
-    benchmark_record<size>::~benchmark_record()
+    template <unsigned long long t_size>
+    bool benchmark_record<t_size>::populate(et::fixed_queue<time_point_m, t_size>& collection, time_point_m point)
     {
-        delete[] start_points;
-        delete[] end_points;
+        return collection.push(point);
     }
 
-    template <unsigned long long size>
-    bool benchmark_record<size>::populate(time_point_m* collection, time_point_m point)
+    template <unsigned long long t_size>
+    bool benchmark_record<t_size>::push_start(time_point_m point)
     {
-        time_point_m* ptr = collection;
-        if (ptr == nullptr)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < size; i++)
-        {
-            ptr = &collection[i];
-            if (!ptr)
-            {
-                collection[i] = point;
-                return true;
-            }
-        }
-        return false;
+        return populate(start_points, point);
     }
 
-    template <unsigned long long size>
-    bool benchmark_record<size>::push_start() const
+    template <unsigned long long t_size>
+    bool benchmark_record<t_size>::push_end(time_point_m point)
     {
-        return populate(start_points, time_point_m::now());
+        return populate(end_points, point);
     }
 
-    template <unsigned long long size>
-    bool benchmark_record<size>::push_end() const
-    {
-        return populate(end_points, time_point_m::now());
-    }
-
-    template <unsigned long long size>
-    benchmark_result benchmark_record<size>::to_result()
+    template <unsigned long long t_size>
+    benchmark_result benchmark_record<t_size>::to_result()
     {
         time_point_m total = { 0 };
         time_point_m highest = { -INT_MAX };
         time_point_m lowest = { INT_MAX };
-        for (unsigned long long i = 0; i < size; i++)
+
+        et::fixed_queue<time_point_m, t_size> sp_r = start_points;
+        et::fixed_queue<time_point_m, t_size> ep_r = end_points;
+
+        while (!sp_r.empty() && !ep_r.empty())
         {
-            time_point_m time_difference = end_points[i] - start_points[i];
-            if (time_difference >= highest)
+            time_point_m start = sp_r.front();
+            time_point_m end = ep_r.front();
+
+            time_point_m difference = end - start;
+
+            if (difference > highest)
             {
-                highest = time_difference;
+                highest = difference;
             }
-            if (time_difference < lowest)
+            if (difference < lowest)
             {
-                lowest = time_difference;
+                lowest = difference;
             }
 
-            total = total + time_difference;
+            total = total + difference;
+
+            sp_r.pop();
+            ep_r.pop();
         }
 
-        const time_point_m mean = total / size;
+        const time_point_m mean = total / t_size;
         benchmark_result result;
 
         result.highest_case = highest;
         result.lowest_case = lowest;
         result.mean_case = mean;
-        result.iterations = size;
+        result.iterations = t_size;
 
         return result;
     }
 
-    template <unsigned long long size>
-    std::string benchmark_record<size>::to_string() const
+    template <unsigned long long t_size>
+    std::string benchmark_record<t_size>::to_string() const
     {
         std::string rv;
-        for (int i = 0; i < size; i++)
+
+        et::fixed_queue<time_point_m, t_size> sp_r = start_points;
+        et::fixed_queue<time_point_m, t_size> ep_r = end_points;
+
+        int iteration = 0;
+        while (!sp_r.empty() && !ep_r.empty())
         {
-            rv += "\titeration: " + std::to_string(i) + "\n";
-            rv += "\t\tstart_point: " + this->start_points[i].flat_string() + "\n";
-            rv += "\t\tend_point: " + this->end_points[i].flat_string() + "\n";
+            time_point_m start = sp_r.front();
+            time_point_m end = ep_r.front();
+
+            rv += "\titeration: " + std::to_string(iteration) + "\n";
+            rv += "\t\tstart_point: " + start.flat_string() + "\n";
+            rv += "\t\tend_point: " + end.flat_string() + "\n";
             rv += "\n";
+
+            sp_r.pop();
+            ep_r.pop();
+
+            iteration++;
         }
+
         return rv;
     }
 
     /**
      * \brief Named benchmark record used for external benchmark posting.
      */
-    template<unsigned long long size>
-    struct named_benchmark_record : public benchmark_record<size>
+    template<unsigned long long t_size>
+    struct named_benchmark_record : public benchmark_record<t_size>
     {
         // name of the record.
         std::string name;
@@ -140,12 +141,12 @@ namespace et
         std::string to_string() const override;
     };
 
-    template <unsigned long long size>
-    std::string named_benchmark_record<size>::to_string() const
+    template <unsigned long long t_size>
+    std::string named_benchmark_record<t_size>::to_string() const
     {
         std::string rv{};
         rv += "named benchmark: " + name + "\n";
-        rv += static_cast<benchmark_record<size>>(*this).to_string();
+        rv += static_cast<benchmark_record<t_size>>(*this).to_string();
         return rv;
     }
 }
