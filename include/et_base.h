@@ -9,9 +9,8 @@ namespace et
      */
     struct base
     {
-        virtual std::string to_string() const;
-    protected:
         virtual ~base() = default;
+        virtual std::string to_string() const;
     };
     inline std::string base::to_string() const
     {
